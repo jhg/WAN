@@ -81,6 +81,7 @@ class WamFileReply(QNetworkReply):
         self.open(self.ReadOnly | self.Unbuffered)
         self.setUrl(url)
         self.content = parent.wam.read(str(url.path()[1:]))
+        self.offset = 0
 
     def __getattribute__(self, name):
         print(name)
@@ -96,8 +97,9 @@ class WamFileReply(QNetworkReply):
         return len(self.content)
 
     def readData(self, maxSize):
-        _content = self.content[:min(maxSize, self.bytesAvailable)]
-        self.content = _content
+        _offset = min(maxSize, self.bytesAvailable)
+        _content = self.content[self.offset:_offset]
+        self.offset = _offset
         return _content
 
 
