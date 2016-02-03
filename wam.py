@@ -1,12 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import sys
 import os
 
+from zipfile import ZipFile, is_zipfile
+
 from PyQt4.QtGui import QApplication, QTableWidget, QTableWidgetItem
-from PyQt4.QtCore import QUrl
+from PyQt4.QtCore import QUrl, QVariant, QTimer, SIGNAL
 from PyQt4.QtWebKit import QWebView, QWebPage
 from PyQt4.QtGui import QGridLayout, QLineEdit, QWidget, QHeaderView
-from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest
+from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 
 
 class UrlInput(QLineEdit):
@@ -69,11 +71,42 @@ class RequestsTable(QTableWidget):
                 continue
             self.setItem(last_row, col, QTableWidgetItem(dat))
 
+
+class WamFileReply(QNetworkReply):
+    def __init__(self, parent, url):
+        super(WamFileReply, self).__init__(parent)
+        #self.setHeader(QNetworkRequest.ContentTypeHeader, QVariant('text/html; charset=utf-8'))
+        QTimer.singleShot(0, self, SIGNAL("readyRead()"))
+        QTimer.singleShot(0, self, SIGNAL("finished()"))
+        self.open(self.ReadOnly | self.Unbuffered)
+        self.setUrl(url)
+        self.content = parent.wam.read(str(url.path()[1:]))
+
+    def __getattribute__(self, name):
+        print(name)
+        return object.__getattribute__(self, name)
+
+    def abort(self):
+        pass
+
+    def isSequential(self):
+        return True
+
+    def bytesAvailable(self):
+        return len(self.content)
+
+    def readData(self, maxSize):
+        _content = self.content[:min(maxSize, self.bytesAvailable)]
+        self.content = _content
+        return _content
+
+
 class Manager(QNetworkAccessManager):
-    def __init__(self, table):
+    def __init__(self, table, wam=None):
         QNetworkAccessManager.__init__(self)
         self.finished.connect(self._finished)
         self.table = table
+        self.wam = wam
 
     def _finished(self, reply):
         headers = reply.rawHeaderPairs()
@@ -84,30 +117,35 @@ class Manager(QNetworkAccessManager):
         status, ok = status.toInt()
         self.table.update([url, str(status), content_type])
 
+    def createRequest(self, operation, request, data):
+        if request.url().scheme() != "wam" or self.wam is None:
+            return super(Manager, self).createRequest(operation, request, data)
+        else:
+            return WamFileReply(self, request.url())
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     grid = QGridLayout()
     browser = QWebView()
-    #url_input = UrlInput(browser)
-    #requests_table = RequestsTable()
-
-    #manager = Manager(requests_table)
+    url_input = UrlInput(browser)
+    requests_table = RequestsTable()
+    wam_file = ZipFile(os.path.abspath(sys.argv[1]))
+    manager = Manager(requests_table, wam_file)
     page = QWebPage()
-    #page.setNetworkAccessManager(manager)
+    page.setNetworkAccessManager(manager)
     browser.setPage(page)
+    browser.load(QUrl('wam:///test.html'))
 
-    browser.load(QUrl('file://%s' % os.path.abspath(sys.argv[1])))
-
-    #js_eval = JavaScriptEvaluator(page)
+    js_eval = JavaScriptEvaluator(page)
     #action_box = ActionInputBox(page)
 
-    #grid.addWidget(url_input, 1, 0)
+    grid.addWidget(url_input, 1, 0)
     #grid.addWidget(action_box, 2, 0)
     grid.addWidget(browser, 0, 0)
-    #grid.addWidget(requests_table, 4, 0)
-    #grid.addWidget(js_eval, 5, 0)
+    grid.addWidget(requests_table, 4, 0)
+    grid.addWidget(js_eval, 5, 0)
 
     main_frame = QWidget()
     main_frame.setLayout(grid)
