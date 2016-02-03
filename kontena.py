@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     grid = QGridLayout()
     browser = QWebView()
-    url_input = UrlInput(browser)
+    #url_input = UrlInput(browser)
     requests_table = RequestsTable()
     wam_file = ZipFile(os.path.abspath(sys.argv[1]))
     manager = Manager(requests_table, wam_file)
@@ -138,14 +138,14 @@ if __name__ == "__main__":
     browser.setPage(page)
     browser.load(QUrl('wam:///test.html'))
 
-    js_eval = JavaScriptEvaluator(page)
+    #js_eval = JavaScriptEvaluator(page)
     #action_box = ActionInputBox(page)
 
-    grid.addWidget(url_input, 1, 0)
+    #grid.addWidget(url_input, 1, 0)
     #grid.addWidget(action_box, 2, 0)
     grid.addWidget(browser, 0, 0)
     grid.addWidget(requests_table, 4, 0)
-    grid.addWidget(js_eval, 5, 0)
+    #grid.addWidget(js_eval, 5, 0)
 
     main_frame = QWidget()
     main_frame.setLayout(grid)
