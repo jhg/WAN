@@ -3,7 +3,7 @@
 Kontena
 
 
-Copyright (C) 2016 Jesus Hernandez Gormaz
+Copyright (C) 2016 Jesus Hernandez Gormaz <jhg.jesus@gmail.com>
 
 Under license: Affero Gnu Public License V3
 """
