@@ -72,9 +72,9 @@ class RequestsTable(QTableWidget):
             self.setItem(last_row, col, QTableWidgetItem(dat))
 
 
-class WamFileReply(QNetworkReply):
+class KontenaFileReply(QNetworkReply):
     def __init__(self, parent, url):
-        super(WamFileReply, self).__init__(parent)
+        super(KontenaFileReply, self).__init__(parent)
         #self.setHeader(QNetworkRequest.ContentTypeHeader, QVariant('text/html; charset=utf-8'))
         QTimer.singleShot(0, self, SIGNAL("readyRead()"))
         QTimer.singleShot(0, self, SIGNAL("finished()"))
@@ -123,7 +123,7 @@ class Manager(QNetworkAccessManager):
         if request.url().scheme() != "wam" or self.wam is None:
             return super(Manager, self).createRequest(operation, request, data)
         else:
-            return WamFileReply(self, request.url())
+            return KontenaFileReply(self, request.url())
 
 
 if __name__ == "__main__":
