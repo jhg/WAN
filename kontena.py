@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Kontena
 
@@ -106,7 +106,7 @@ class KontenaFileReply(QNetworkReply):
         return len(self.content)
 
     def readData(self, maxSize):
-        _offset = min(maxSize, self.bytesAvailable)
+        _offset = min(maxSize, self.bytesAvailable())
         _content = self.content[self.offset:_offset]
         self.offset = _offset
         return _content
