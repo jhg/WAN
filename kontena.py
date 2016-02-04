@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+"""
+Kontena
+
+
+Copyright (C) 2016 Jesus Hernandez Gormaz
+
+Under license: Affero Gnu Public License V3
+"""
+
 import sys
 import os
 
