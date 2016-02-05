@@ -125,8 +125,12 @@ class Manager(QNetworkAccessManager):
         content_type = headers.get("Content-Type")
         url = reply.url().toString()
         status = reply.attribute(QNetworkRequest.HttpStatusCodeAttribute)
-        status, ok = status.toInt()
-        self.table.update([url, str(status), content_type])
+        if status is not None:
+            status, ok = status.toInt()
+            str(status)
+        else:
+            status = 'null'
+        self.table.update([url, status, content_type])
 
     def createRequest(self, operation, request, data):
         if request.url().scheme() != "wam" or self.wam is None:
