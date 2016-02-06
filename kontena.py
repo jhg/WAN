@@ -14,13 +14,14 @@ import os
 from zipfile import ZipFile, is_zipfile
 
 from PyQt4.QtGui import QApplication, QTableWidget, QTableWidgetItem
+from PyQt4.QtGui import QGridLayout, QLineEdit, QWidget, QHeaderView
 from PyQt4.QtCore import QUrl, QVariant, QTimer, SIGNAL
 from PyQt4.QtWebKit import QWebView, QWebPage
-from PyQt4.QtGui import QGridLayout, QLineEdit, QWidget, QHeaderView
 from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
 
 
 class UrlInput(QLineEdit):
+
     def __init__(self, browser):
         super(UrlInput, self).__init__()
         self.browser = browser
@@ -32,6 +33,7 @@ class UrlInput(QLineEdit):
 
 
 class JavaScriptEvaluator(QLineEdit):
+
     def __init__(self, page):
         super(JavaScriptEvaluator, self).__init__()
         self.page = page
@@ -41,7 +43,9 @@ class JavaScriptEvaluator(QLineEdit):
         frame = self.page.currentFrame()
         result = frame.evaluateJavaScript(self.text())
 
+
 class ActionInputBox(QLineEdit):
+
     def __init__(self, page):
         super(ActionInputBox, self).__init__()
         self.page = page
@@ -82,6 +86,7 @@ class RequestsTable(QTableWidget):
 
 
 class KontenaFileReply(QNetworkReply):
+
     def __init__(self, parent, url):
         super(KontenaFileReply, self).__init__(parent)
         #self.setHeader(QNetworkRequest.ContentTypeHeader, QVariant('text/html; charset=utf-8'))
@@ -89,12 +94,8 @@ class KontenaFileReply(QNetworkReply):
         QTimer.singleShot(0, self, SIGNAL("finished()"))
         self.open(self.ReadOnly | self.Unbuffered)
         self.setUrl(url)
-        self.content = parent.wam.read(str(url.path()[1:]))
+        self.content = parent.kontena.read(str(url.path()[1:]))
         self.offset = 0
-
-    def __getattribute__(self, name):
-        print(name)
-        return object.__getattribute__(self, name)
 
     def abort(self):
         pass
@@ -113,11 +114,12 @@ class KontenaFileReply(QNetworkReply):
 
 
 class Manager(QNetworkAccessManager):
-    def __init__(self, table, wam=None):
+
+    def __init__(self, table, kontena=None):
         QNetworkAccessManager.__init__(self)
         self.finished.connect(self._finished)
         self.table = table
-        self.wam = wam
+        self.kontena = kontena
 
     def _finished(self, reply):
         headers = reply.rawHeaderPairs()
@@ -133,25 +135,25 @@ class Manager(QNetworkAccessManager):
         self.table.update([url, status, content_type])
 
     def createRequest(self, operation, request, data):
-        if request.url().scheme() != "wam" or self.wam is None:
+        if request.url().scheme() != "file" or self.kontena is None:
             return super(Manager, self).createRequest(operation, request, data)
         else:
             return KontenaFileReply(self, request.url())
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" and len(sys.argv) >= 2 and is_zipfile(sys.argv[1]):
     app = QApplication(sys.argv)
 
     grid = QGridLayout()
     browser = QWebView()
     #url_input = UrlInput(browser)
     requests_table = RequestsTable()
-    wam_file = ZipFile(os.path.abspath(sys.argv[1]))
-    manager = Manager(requests_table, wam_file)
+    kontena_file = ZipFile(os.path.abspath(sys.argv[1]))
+    manager = Manager(requests_table, kontena_file)
     page = QWebPage()
     page.setNetworkAccessManager(manager)
     browser.setPage(page)
-    browser.load(QUrl('wam:///test.html'))
+    browser.load(QUrl('file:///index.html'))
 
     #js_eval = JavaScriptEvaluator(page)
     #action_box = ActionInputBox(page)
@@ -159,7 +161,7 @@ if __name__ == "__main__":
     #grid.addWidget(url_input, 1, 0)
     #grid.addWidget(action_box, 2, 0)
     grid.addWidget(browser, 0, 0)
-    grid.addWidget(requests_table, 4, 0)
+    #grid.addWidget(requests_table, 4, 0)
     #grid.addWidget(js_eval, 5, 0)
 
     main_frame = QWidget()

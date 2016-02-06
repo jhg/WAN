@@ -1,10 +1,14 @@
 # Kontena | コンテナ
 Kontena | コンテナ
 
+
 Box application hypertext
 A example file for test Kontena:
-    https://anonfiles.com/file/b86e26091f8c23b3501a10698d08ff22
+
+https://bit.ly/1Rbki5n
+
 
 ボックスハイパーテキストアプリケーション
 テストコンテナ用のサンプルファイル:
-    https://anonfiles.com/file/b86e26091f8c23b3501a10698d08ff22
+
+https://bit.ly/1Rbki5n
