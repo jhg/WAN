@@ -143,12 +143,14 @@ class Manager(QNetworkAccessManager):
 
 if __name__ == "__main__" and len(sys.argv) >= 2 and is_zipfile(sys.argv[1]):
     app = QApplication(sys.argv)
+    kontena_file = os.path.abspath(sys.argv[1])
+    del sys.argv[1]
+    kontena_file = ZipFile(kontena_file)
 
     grid = QGridLayout()
     browser = QWebView()
     #url_input = UrlInput(browser)
     requests_table = RequestsTable()
-    kontena_file = ZipFile(os.path.abspath(sys.argv[1]))
     manager = Manager(requests_table, kontena_file)
     page = QWebPage()
     page.setNetworkAccessManager(manager)
