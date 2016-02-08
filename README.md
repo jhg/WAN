@@ -6,7 +6,7 @@ Box application hypertext.
 A example file for test Kontena:  
 http://q.gs/9lAKb
 
-ボックスハイパーテキストアプリケーション  
+ボックスハイパーテキストアプリケーション。  
 テストコンテナ用のサンプルファイル:  
 http://q.gs/9lAKb
 
