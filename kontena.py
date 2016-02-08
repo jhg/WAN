@@ -17,51 +17,8 @@ from PyQt4.QtGui import QApplication, QTableWidget, QTableWidgetItem
 from PyQt4.QtGui import QGridLayout, QLineEdit, QWidget, QHeaderView
 from PyQt4.QtCore import QUrl, QVariant, QTimer, SIGNAL
 from PyQt4.QtWebKit import QWebView, QWebPage
-from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest, QNetworkReply
-
-
-class UrlInput(QLineEdit):
-
-    def __init__(self, browser):
-        super(UrlInput, self).__init__()
-        self.browser = browser
-        self.returnPressed.connect(self._return_pressed)
-
-    def _return_pressed(self):
-        url = QUrl(self.text())
-        browser.load(url)
-
-
-class JavaScriptEvaluator(QLineEdit):
-
-    def __init__(self, page):
-        super(JavaScriptEvaluator, self).__init__()
-        self.page = page
-        self.returnPressed.connect(self._return_pressed)
-
-    def _return_pressed(self):
-        frame = self.page.currentFrame()
-        result = frame.evaluateJavaScript(self.text())
-
-
-class ActionInputBox(QLineEdit):
-
-    def __init__(self, page):
-        super(ActionInputBox, self).__init__()
-        self.page = page
-        self.returnPressed.connect(self._return_pressed)
-
-    def _return_pressed(self):
-        frame = self.page.currentFrame()
-        action_string = str(self.text()).lower()
-        if action_string == "b":
-            self.page.triggerAction(QWebPage.Back)
-        elif action_string == "f":
-            self.page.triggerAction(QWebPage.Forward)
-        elif action_string == "s":
-            self.page.triggerAction(QWebPage.Stop)
-        elif action_string == "r":
-            self.page.triggerAction(QWebPage.Reload)
+from PyQt4.QtNetwork import QNetworkAccessManager
+from PyQt4.QtNetwork import QNetworkRequest, QNetworkReply
 
 
 class RequestsTable(QTableWidget):
@@ -89,12 +46,15 @@ class KontenaFileReply(QNetworkReply):
 
     def __init__(self, parent, url):
         super(KontenaFileReply, self).__init__(parent)
-        #self.setHeader(QNetworkRequest.ContentTypeHeader, QVariant('text/html; charset=utf-8'))
+        # self.setHeader(
+        #     QNetworkRequest.ContentTypeHeader,
+        #     QVariant('text/html; charset=utf-8')
+        # )
         QTimer.singleShot(0, self, SIGNAL("readyRead()"))
         QTimer.singleShot(0, self, SIGNAL("finished()"))
         self.open(self.ReadOnly | self.Unbuffered)
         self.setUrl(url)
-        self.content = parent.kontena.read(str(url.path()[1:]))
+        self.content = parent.kontena.read_file(str(url.path()[1:]))
         self.offset = 0
 
     def abort(self):
@@ -113,9 +73,9 @@ class KontenaFileReply(QNetworkReply):
         return _content
 
 
-class Manager(QNetworkAccessManager):
+class KontenaManager(QNetworkAccessManager):
 
-    def __init__(self, table, kontena=None):
+    def __init__(self, kontena, table):
         QNetworkAccessManager.__init__(self)
         self.finished.connect(self._finished)
         self.table = table
@@ -123,7 +83,7 @@ class Manager(QNetworkAccessManager):
 
     def _finished(self, reply):
         headers = reply.rawHeaderPairs()
-        headers = {str(k):str(v) for k,v in headers}
+        headers = {str(k): str(v) for k, v in headers}
         content_type = headers.get("Content-Type")
         url = reply.url().toString()
         status = reply.attribute(QNetworkRequest.HttpStatusCodeAttribute)
@@ -135,39 +95,42 @@ class Manager(QNetworkAccessManager):
         self.table.update([url, status, content_type])
 
     def createRequest(self, operation, request, data):
-        if request.url().scheme() != "file" or self.kontena is None:
-            return super(Manager, self).createRequest(operation, request, data)
-        else:
+        if request.url().scheme() == "file":
             return KontenaFileReply(self, request.url())
+        return super(KontenaManager, self).createRequest(operation, request, data)
+
+
+class KontenaApp(object):
+
+    def __init__(self, argv):
+        self.app = app = QApplication(argv)
+        self.browser = QWebView()
+        requests_table = RequestsTable()
+        manager = KontenaManager(self, requests_table)
+        page = QWebPage()
+        page.setNetworkAccessManager(manager)
+        self.browser.setPage(page)
+        grid = QGridLayout()
+        grid.addWidget(self.browser, 0, 0)
+        # grid.addWidget(requests_table, 4, 0)
+        self.window = QWidget()
+        self.window.setLayout(grid)
+
+    def open_app(self, path):
+        self.kontena = ZipFile(path)
+
+    def read_file(self, file_name):
+        return self.kontena.read(file_name)
+
+    def exe(self):
+        self.browser.load(QUrl('file:///index.html'))
+        self.window.show()
+        sys.exit(self.app.exec_())
 
 
 if __name__ == "__main__" and len(sys.argv) >= 2 and is_zipfile(sys.argv[1]):
-    app = QApplication(sys.argv)
     kontena_file = os.path.abspath(sys.argv[1])
     del sys.argv[1]
-    kontena_file = ZipFile(kontena_file)
-
-    grid = QGridLayout()
-    browser = QWebView()
-    #url_input = UrlInput(browser)
-    requests_table = RequestsTable()
-    manager = Manager(requests_table, kontena_file)
-    page = QWebPage()
-    page.setNetworkAccessManager(manager)
-    browser.setPage(page)
-    browser.load(QUrl('file:///index.html'))
-
-    #js_eval = JavaScriptEvaluator(page)
-    #action_box = ActionInputBox(page)
-
-    #grid.addWidget(url_input, 1, 0)
-    #grid.addWidget(action_box, 2, 0)
-    grid.addWidget(browser, 0, 0)
-    #grid.addWidget(requests_table, 4, 0)
-    #grid.addWidget(js_eval, 5, 0)
-
-    main_frame = QWidget()
-    main_frame.setLayout(grid)
-    main_frame.show()
-
-    sys.exit(app.exec_())
+    kontena = KontenaApp(sys.argv)
+    kontena.open_app(kontena_file)
+    kontena.exe()
