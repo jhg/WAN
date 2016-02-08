@@ -4,11 +4,11 @@ experimental and development | 実験と開発
 
 Box application hypertext.  
 A example file for test Kontena:  
-https://bit.ly/1Rbki5n
+http://q.gs/9lAKb
 
 ボックスハイパーテキストアプリケーション  
 テストコンテナ用のサンプルファイル:  
-https://bit.ly/1Rbki5n
+http://q.gs/9lAKb
 
 
 ###### Run | ラン

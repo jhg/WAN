@@ -11,6 +11,7 @@ Under license: Affero Gnu Public License V3
 import sys
 import os
 
+from io import BytesIO
 from zipfile import ZipFile, is_zipfile
 
 from PyQt4.QtGui import QApplication, QTableWidget, QTableWidgetItem
@@ -116,8 +117,9 @@ class KontenaApp(object):
         self.window = QWidget()
         self.window.setLayout(grid)
 
-    def open_app(self, path):
-        self.kontena = ZipFile(path)
+    def open_app(self, data):
+        data.seek(23)
+        self.kontena = ZipFile(data)
 
     def read_file(self, file_name):
         return self.kontena.read(file_name)
@@ -128,9 +130,10 @@ class KontenaApp(object):
         sys.exit(self.app.exec_())
 
 
-if __name__ == "__main__" and len(sys.argv) >= 2 and is_zipfile(sys.argv[1]):
+if __name__ == "__main__" and len(sys.argv) >= 2:
     kontena_file = os.path.abspath(sys.argv[1])
     del sys.argv[1]
-    kontena = KontenaApp(sys.argv)
-    kontena.open_app(kontena_file)
-    kontena.exe()
+    with open(kontena_file, 'rb') as kontena_file:
+        kontena = KontenaApp(sys.argv)
+        kontena.open_app(BytesIO(kontena_file.read()))
+        kontena.exe()
