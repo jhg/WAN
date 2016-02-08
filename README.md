@@ -14,13 +14,13 @@ http://q.gs/9lAKb
 ###### Run | ラン
 ```
 chmod +x kontana.py
-./kontena.py test.zip
+./kontena.py test.kon
 ```
 
 ###### Embed | 埋め込みます
 ```
 chmod +x kontana-make.py
-./kontana-make.py test.zip test.py
+./kontana-make.py test.kon test.py
 chmod +x test.py
 ./test.py
 ```
